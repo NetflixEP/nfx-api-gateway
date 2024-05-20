@@ -1,0 +1,11 @@
+services:
+  api.gateway:
+    container_name: api.gateway
+    build: 
+      context: .
+    volumes: 
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./.urls:/etc/nginx/.urls
+      - ./.config:~/jwt_checker/.config
+    ports:
+      - '80:80'
