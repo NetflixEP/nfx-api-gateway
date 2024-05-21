@@ -4,7 +4,6 @@ import requests
 
 app = Flask(__name__)
 config_file = open("./.config", "r").read().split('\n')
-urls = open("/etc/nginx/.urls", "r").read().split('\n')
 
 SECRET_KEY = config_file[0].split(' ')[1]
 
@@ -23,19 +22,19 @@ def verify_jwt():
         return jsonify({"error": "Unauthorized - Invalid token"}), 401
         
 
-@app.route('/api/v1/movie', methods=['GET', 'POST', 'PUT', 'DELETE'])
-@app.route('/api/v1/play', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def handle_verified():
+@app.route('/api/v1/movie/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/v1/play/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/v1/movie', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/v1/play', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/v1/movie/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/v1/play/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE'])
+def handle_verified(path):
     result = verify_jwt()
     if result:
         return result
-    if request.path == "/api/v1/movie":
-        backend_url = urls[0].split(' ')[1][:-1]
-    else:
-        backend_url = urls[1].split(' ')[1][:-1]
     backend_response = requests.request(
         method=request.method,
-        url=backend_url,
+        url=request.path,
         headers={key: value for key, value in request.headers if key != 'Host'},
         params=request.args,
         data=request.data

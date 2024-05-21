@@ -4,15 +4,23 @@ services:
     image: nginx:latest
     volumes: 
       - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./.urls:/etc/nginx/.urls
     ports:
       - '80:80'
+    networks:
+      - api-gateway-network
+
   jwt_checker:
     container_name: jwt_checker
     build: 
       context: .
     volumes: 
       - ./.config:/app/jwt_checker/.config
-      - ./.urls:/etc/nginx/.urls
     ports:
       - '5000:5000'
+    networks:
+      - api-gateway-network
+
+networks:
+  api-gateway-network:
+    name: api-gateway-network
+    external: true
