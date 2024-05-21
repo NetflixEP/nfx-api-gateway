@@ -4,9 +4,9 @@ import requests
 
 app = Flask(__name__)
 config_file = open("./.config", "r").read().split('\n')
-url_file = open("/etc/nginx/.urls", "r").read()
+urls = open("/etc/nginx/.urls", "r").read().split('\n')
 
-SECRET_KEY = config_file[0].split('\n')[0]
+SECRET_KEY = config_file[0].split(' ')[1]
 
 def verify_jwt():
     auth_header = request.headers.get('Authorization')
@@ -14,7 +14,6 @@ def verify_jwt():
         return jsonify({"error": "Unauthorized - JWT token missing"}), 401
 
     token = auth_header.split(" ")[1]
-
     try:
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         g.user = decoded
@@ -22,21 +21,18 @@ def verify_jwt():
         return jsonify({"error": "Unauthorized - Token has expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Unauthorized - Invalid token"}), 401
-
-@app.before_request
-def before_request():
-    if request.path in ['api/v1/movie', '/api/v1/play']:
-        result = verify_jwt()
-        if result:
-            return result
+        
 
 @app.route('/api/v1/movie', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @app.route('/api/v1/play', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def handle_verified():
+    result = verify_jwt()
+    if result:
+        return result
     if request.path == "/api/v1/movie":
-        backend_url = url_file[0].split(' ')[1]
+        backend_url = urls[0].split(' ')[1][:-1]
     else:
-        backend_url = url_file[1].split(' ')[1]
+        backend_url = urls[1].split(' ')[1][:-1]
     backend_response = requests.request(
         method=request.method,
         url=backend_url,

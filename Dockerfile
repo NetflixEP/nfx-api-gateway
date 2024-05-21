@@ -1,10 +1,17 @@
-FROM nginx:latest
+FROM python:3.11-slim
 
-RUN apt-get update && apt-get install python -y
-RUN apt-get install pip -y && pip install flask && pip install jwt && pip install requests
+WORKDIR /app/jwt_checker/
 
-COPY ./jwt_checker.py /etc/jwt_checker/jwt_checker.py
+RUN apt-get update && apt-get install -y nginx procps python-is-python3 python3-venv
 
-WORKDIR /etc/jwt_checker/
+COPY ./jwt_checker.py /app/jwt_checker/jwt_checker.py
 
-RUN python jwt_checker.py
+RUN python3 -m venv .venv
+RUN . .venv/bin/activate && pip install flask pyjwt requests
+
+RUN chmod +x /app/jwt_checker/jwt_checker.py
+RUN chmod +x /app/jwt_checker/.venv/bin/python
+
+EXPOSE 5000
+
+CMD ["/app/jwt_checker/.venv/bin/python", "/app/jwt_checker/jwt_checker.py"]
